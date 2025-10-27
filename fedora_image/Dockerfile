@@ -26,6 +26,8 @@ RUN dnf install -y \
     tmux \
     tree \
     podman \
+    vim \
+    neovim \
     && dnf clean all
 
 # Create jacob user
