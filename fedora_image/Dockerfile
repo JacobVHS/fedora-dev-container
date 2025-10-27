@@ -9,7 +9,7 @@ COPY zshrc /home/jacob/.zshrc
 COPY shell_aliases /home/jacob/.shell_aliases
 COPY tmux.conf /home/jacob/.tmux.conf
 
-# Install Ansible and other required packages using dnf
+# Install required packages using dnf
 RUN dnf install -y \
     python3 \
     python3-pip \
@@ -28,6 +28,8 @@ RUN dnf install -y \
     podman \
     vim \
     neovim \
+    psutils \
+    fzf \
     && dnf clean all
 
 # Create jacob user
