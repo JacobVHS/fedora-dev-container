@@ -1,0 +1,62 @@
+FROM fedora:latest
+
+LABEL ansible-execution-environment=true
+
+USER root
+WORKDIR /tmp
+
+COPY shells /etc/shells
+COPY bashrc /home/jacob/.bashrc
+COPY zshrc /home/jacob/.zshrc
+COPY shell_aliases /home/jacob/.shell_aliases
+COPY tmux.conf /home/jacob/.tmux.conf
+
+# Install Ansible and other required packages using dnf
+RUN dnf install -y \
+    python3 \
+    python3-pip \
+    zsh \
+    curl \
+    ansible-core \
+    bat \
+    zsh-syntax-highlighting \
+    git \
+    tmux \
+    tree \
+    && dnf clean all
+
+# Install ansible developer tools
+RUN python3 -m pip install --no-cache-dir ansible-dev-tools
+
+# Create jacob user
+RUN useradd -m -s /usr/bin/zsh jacob
+
+# Set zsh as the default shell for the jacob user
+RUN usermod -s /usr/bin/zsh jacob
+
+# Configure Git identity for jacob
+RUN git config --global user.name "Jacob Schreuder" && \
+    git config --global user.email "jacob@localhost"
+
+# Create ansible directories
+RUN mkdir -p /.ansible/roles /.ansible/collections /.ansible/modules && touch /.ansible/.lock
+
+# In OpenShift, container will run as a random uid number and gid 0. Make sure things
+# are writeable by the root group.
+RUN chgrp -R 0 /home && chmod -R g=u /etc/passwd /etc/group /home /.ansible/.lock
+
+# Set the default shell for the container
+SHELL ["/usr/bin/zsh", "-c"]
+
+# Copy over config dir
+COPY config /home/jacob/.config
+RUN git clone -b v2.1.3 https://github.com/catppuccin/tmux.git ~/.config/tmux/plugins/catppuccin/tmux
+
+# Add starship prompt
+RUN curl -sS https://starship.rs/install.sh | sh -s -- -y
+
+# Fix ownership for jacob user
+RUN chown -R jacob:jacob /home/jacob
+RUN echo 'jacob ALL=(ALL) NOPASSWD:ALL' > /etc/sudoers.d/jacob
+USER jacob
+WORKDIR /home/jacob
