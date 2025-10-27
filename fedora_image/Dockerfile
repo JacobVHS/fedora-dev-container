@@ -1,7 +1,5 @@
 FROM fedora:latest
 
-LABEL ansible-execution-environment=true
-
 USER root
 WORKDIR /tmp
 
