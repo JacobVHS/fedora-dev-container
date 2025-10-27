@@ -27,6 +27,7 @@ RUN dnf install -y \
     git \
     tmux \
     tree \
+    podman \
     && dnf clean all
 
 # Install ansible developer tools
@@ -37,10 +38,6 @@ RUN useradd -m -s /usr/bin/zsh jacob
 
 # Set zsh as the default shell for the jacob user
 RUN usermod -s /usr/bin/zsh jacob
-
-# Configure Git identity for jacob
-RUN git config --global user.name "Jacob Schreuder" && \
-    git config --global user.email "jacob@localhost"
 
 # Create ansible directories
 RUN mkdir -p /.ansible/roles /.ansible/collections /.ansible/modules && touch /.ansible/.lock
