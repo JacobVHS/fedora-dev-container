@@ -30,9 +30,6 @@ RUN dnf install -y \
     podman \
     && dnf clean all
 
-# Install ansible developer tools
-RUN python3 -m pip install --no-cache-dir ansible-dev-tools
-
 # Create jacob user
 RUN useradd -m -s /usr/bin/zsh jacob
 
