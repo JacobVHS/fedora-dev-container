@@ -30,6 +30,8 @@ RUN dnf install -y \
     neovim \
     psutils \
     fzf \
+    awscli \
+    https://s3.amazonaws.com/session-manager-downloads/plugin/latest/linux_64bit/session-manager-plugin.rpm \
     && dnf clean all
 
 # Create jacob user
