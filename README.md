@@ -3,6 +3,38 @@
 This is a git repository managing a standard base image for work. Fedora is the base.
 
 ## Usage examples
+- Example usage in vs code using devcontainers:
+```json
+{
+  "name": "Jacob Dev Environment",
+  "image": "quay.io/jacobdschreuder/fedora-dev-container:latest",
+  
+  "runArgs": [
+    "--privileged",
+    "--security-opt", "label=disable"
+  ],
+  
+  "mounts": [
+    "source=${localEnv:USERPROFILE}/.ssh,target=/tmp/.ssh-host,type=bind,readonly"
+  ],
+  
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "redhat.ansible",
+        "ms-azuretools.vscode-containers",
+        "eamodio.gitlens",
+        "ms-python.vscode-pylance",
+        "ms-python.python",
+        "ms-python.debugpy",
+        "redhat.vscode-yaml"
+      ]
+    }
+  },
+  
+  "postCreateCommand": "mkdir -p ~/.ssh && cp -r /tmp/.ssh-host/* ~/.ssh/ && chmod 700 ~/.ssh && chmod 400 ~/.ssh/id_* && chmod 644 ~/.ssh/*.pub && echo 'Ready!'"
+}
+```
 
 - Use as an ad hoc shell on a windows host with docker or podman installed
 ```powershell
@@ -144,30 +176,6 @@ bash() {
 alias linux='bash'
 ```
 
-- Example usage in vs code using devcontainers:
-```json
-{
-  "name": "Jacob Dev Environment",
-  "image": "quay.io/jacobdschreuder/fedora-dev-container:latest",
-  
-  "runArgs": [
-    "--privileged",
-    "--security-opt", "label=disable"
-  ],
-  
-  "mounts": [
-    "source=${localEnv:USERPROFILE}/.ssh,target=/tmp/.ssh-host,type=bind,readonly"
-  ],
-  
-  "customizations": {
-    "vscode": {
-      "extensions": []
-    }
-  },
-  
-  "postCreateCommand": "mkdir -p ~/.ssh && cp -r /tmp/.ssh-host/* ~/.ssh/ && chmod 700 ~/.ssh && chmod 400 ~/.ssh/id_* && chmod 644 ~/.ssh/*.pub && echo 'Ready!'"
-}
-```
 
 - Example usage in che workspace devfile
 ```yaml
