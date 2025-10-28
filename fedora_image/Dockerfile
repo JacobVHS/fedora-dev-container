@@ -34,6 +34,23 @@ RUN dnf install -y \
     https://s3.amazonaws.com/session-manager-downloads/plugin/latest/linux_64bit/session-manager-plugin.rpm \
     && dnf clean all
 
+# Install kubectl
+RUN curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl" \
+    && chmod +x kubectl \
+    && mv kubectl /usr/local/bin/
+
+# Install k9s
+RUN curl -LO "https://github.com/derailed/k9s/releases/latest/download/k9s_Linux_amd64.tar.gz" \
+    && tar -xzf k9s_Linux_amd64.tar.gz \
+    && mv k9s /usr/local/bin/ \
+    && rm k9s_Linux_amd64.tar.gz
+
+# Install oc
+RUN curl -LO "https://mirror.openshift.com/pub/openshift-v4/clients/ocp/stable/openshift-client-linux.tar.gz" \
+    && tar -xzf openshift-client-linux.tar.gz \
+    && mv oc kubectl /usr/local/bin/ \
+    && rm openshift-client-linux.tar.gz
+
 # Create jacob user
 RUN useradd -m -s /usr/bin/zsh jacob
 
