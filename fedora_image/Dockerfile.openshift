@@ -1,0 +1,106 @@
+FROM fedora:latest
+
+USER root
+WORKDIR /tmp
+
+COPY shells /etc/shells
+COPY bashrc /home/user/.bashrc
+COPY zshrc /home/user/.zshrc
+COPY shell_aliases /home/user/.shell_aliases
+COPY tmux.conf /home/user/.tmux.conf
+
+# Install required packages using dnf
+RUN dnf install -y \
+    python3 \
+    python3-pip \
+    python3-devel \
+    gcc \
+    gcc-c++ \
+    make \
+    zsh \
+    curl \
+    ansible-core \
+    bat \
+    zsh-syntax-highlighting \
+    git \
+    tmux \
+    tree \
+    podman \
+    vim \
+    neovim \
+    psutils \
+    fzf \
+    awscli \
+    sudo \
+    https://s3.amazonaws.com/session-manager-downloads/plugin/latest/linux_64bit/session-manager-plugin.rpm \
+    && dnf clean all
+
+# Install kubectl
+RUN curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl" \
+    && chmod +x kubectl \
+    && mv kubectl /usr/local/bin/
+
+# Install k9s
+RUN curl -LO "https://github.com/derailed/k9s/releases/latest/download/k9s_Linux_amd64.tar.gz" \
+    && tar -xzf k9s_Linux_amd64.tar.gz \
+    && mv k9s /usr/local/bin/ \
+    && rm k9s_Linux_amd64.tar.gz
+
+# Install oc
+RUN curl -LO "https://mirror.openshift.com/pub/openshift-v4/clients/ocp/stable/openshift-client-linux.tar.gz" \
+    && tar -xzf openshift-client-linux.tar.gz \
+    && mv oc /usr/local/bin/ \
+    && rm openshift-client-linux.tar.gz kubectl
+
+# Install starship prompt
+RUN curl -sS https://starship.rs/install.sh | sh -s -- -y
+
+# Create user directory structure that works with random UIDs
+RUN mkdir -p /home/user/.config \
+    /home/user/.ansible/roles \
+    /home/user/.ansible/collections \
+    /home/user/.ansible/modules && \
+    touch /home/user/.ansible/.lock
+
+# Copy over config directory
+COPY config /home/user/.config
+
+# Clone tmux catppuccin theme
+RUN git clone -b v2.1.3 https://github.com/catppuccin/tmux.git /home/user/.config/tmux/plugins/catppuccin/tmux
+
+# Make everything in /home writable by the root group (GID 0)
+# OpenShift runs containers with random UID but always GID 0
+RUN chgrp -R 0 /home && \
+    chmod -R g=u /home && \
+    chmod g=u /etc/passwd /etc/group
+
+# Ensure zsh is accessible to all users
+RUN chmod -R 775 /usr/share/zsh
+
+# Create entrypoint script to handle dynamic user setup
+RUN printf '#!/bin/bash\n\
+# Add user to passwd if it does not exist\n\
+if ! whoami &> /dev/null; then\n\
+  if [ -w /etc/passwd ]; then\n\
+    echo "user:x:$(id -u):0:OpenShift User:/home/user:/usr/bin/zsh" >> /etc/passwd\n\
+  fi\n\
+fi\n\
+\n\
+# Set HOME and working directory\n\
+export HOME=/home/user\n\
+cd /home/user\n\
+\n\
+# Execute the command\n\
+exec "$@"\n' > /usr/local/bin/entrypoint.sh && \
+    chmod +x /usr/local/bin/entrypoint.sh
+
+# Set the default shell for the container
+SHELL ["/usr/bin/zsh", "-c"]
+
+WORKDIR /home/user
+
+# Use a non-root user by default (OpenShift will override with random UID)
+USER 1001
+
+ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
+CMD ["tail", "-f", "/dev/null"]

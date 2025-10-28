@@ -1,0 +1,29 @@
+{
+  "name": "Jacob Dev Environment",
+  "image": "quay.io/jacobdschreuder/fedora-dev-container:latest",
+  
+  "runArgs": [
+    "--privileged",
+    "--security-opt", "label=disable"
+  ],
+  
+  "mounts": [
+    "source=${localEnv:USERPROFILE}/.ssh,target=/tmp/.ssh-host,type=bind,readonly"
+  ],
+  
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "redhat.ansible",
+        "ms-azuretools.vscode-containers",
+        "eamodio.gitlens",
+        "ms-python.vscode-pylance",
+        "ms-python.python",
+        "ms-python.debugpy",
+        "redhat.vscode-yaml"
+      ]
+    }
+  },
+  
+  "postCreateCommand": "mkdir -p ~/.ssh && cp -r /tmp/.ssh-host/* ~/.ssh/ && chmod 700 ~/.ssh && chmod 400 ~/.ssh/id_* && chmod 644 ~/.ssh/*.pub && echo 'Ready!'"
+}
